@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-import os, sys, re, base64, urlparse, urllib2, urllib, datetime
+import os, sys, re, base64, urlparse, urllib2, urllib, datetime, time
 from bs4 import BeautifulSoup
 import lxml
 import requests
@@ -159,16 +159,52 @@ def handle_css_content(index, css, verbose=True):
     # Watch out! how to handle urls which contain parentheses inside? Oh god, css does not support such kind of urls
     # I tested such url in css, and, unfortunately, the css rule is broken. LOL!
     # I have to say that, CSS is awesome!
-    reg = re.compile(r'url\s*\((.+?)\)')
+    # Edit: That was wrong, we do have to deal with this.
+    reg = re.compile(r'url\s*\(')
 
     def repl(matchobj):
         src = matchobj.group(1).strip(' \'"')
         # if src.lower().endswith('woff') or src.lower().endswith('ttf') or src.lower().endswith('otf') or src.lower().endswith('eot'):
-        #     # dont handle font data uri currently
-        #     return 'url(' + src + ')'
-        return 'url(' + data_to_base64(index, src, verbose=verbose) + ')'
+            # dont handle font data uri currently
+            # return 'url(' + src + ')'
+        output = 'url(' + data_to_base64(index, src, verbose=verbose) + ')'
+        return output
+        
+    def find_inside(search, start=None, end=None):
+        count = 0
+        index = start
+        if end is None:
+            end = len(search)
+        while index < end:
+            letter = search[index]
+            if letter == '(':
+                count += 1
+            elif letter == ')':
+                count -= 1
+            elif letter == '\n':
+                if verbose: log('[ WARN ] reached end of line without finding closing parentheses', 'yellow')
+                return None
+            if count == 0:
+                break
+            index += 1
+        return search[start + 1:index]
 
-    css = reg.sub(repl, css)
+    regex = ''
+    seachIndex = 0
+    while seachIndex < len(css):
+        match = reg.search(css[seachIndex:])
+        if not match:
+            break
+        start = match.end() - 1 + seachIndex
+        output = find_inside(css, start)
+        if not output.strip(' \'"').startswith('data:'):
+            regex += re.escape(output) + r'|'
+        seachIndex += match.end()
+    
+    if regex:
+        reg = re.compile(r'url\s*\((' + regex[:-1] + r')\)')
+        css = reg.sub(repl, css)
+
     return css
 
 
@@ -319,4 +355,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
