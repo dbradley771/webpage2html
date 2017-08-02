@@ -167,8 +167,7 @@ def handle_css_content(index, css, verbose=True):
         # if src.lower().endswith('woff') or src.lower().endswith('ttf') or src.lower().endswith('otf') or src.lower().endswith('eot'):
             # dont handle font data uri currently
             # return 'url(' + src + ')'
-        output = 'url(' + data_to_base64(index, src, verbose=verbose) + ')'
-        return output
+        return 'url(' + data_to_base64(index, src, verbose=verbose) + ')'
         
     def find_inside(search, start=None, end=None):
         count = 0
