@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-import os, sys, re, base64, urlparse, urllib2, urllib, datetime, time
+import os, sys, re, base64, urlparse, urllib2, urllib, datetime
 from bs4 import BeautifulSoup
 import lxml
 import requests
